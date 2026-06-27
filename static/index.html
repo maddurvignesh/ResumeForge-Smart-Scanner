@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResumeForge - Smart Resume Screener & ATS Optimizer</title>
+    <meta name="description" content="Evaluate resume match quality, parse skills, get ATS optimization suggestions, and discover courses to bridge skill gaps.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <!-- Background Elements -->
+    <div class="blob blob-purple"></div>
+    <div class="blob blob-blue"></div>
+    <div class="blob blob-indigo"></div>
+
+    <!-- Main Container -->
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
+                <h1>Resume<span>Forge</span></h1>
+            </div>
+            <div class="header-actions">
+                <button id="api-key-btn" class="btn btn-secondary btn-icon-text">
+                    <i class="fa-solid fa-key"></i>
+                    <span>Configure Gemini AI</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="app-main">
+            <!-- Left Side: Input Panel -->
+            <section class="input-panel glass-panel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-file-arrow-up text-primary"></i> Upload Resume & Job Description</h2>
+                    <p>Provide your resume and the target role details to get screened.</p>
+                </div>
+
+                <form id="analyze-form" class="analyze-form">
+                    <!-- Job Description Textarea -->
+                    <div class="form-group">
+                        <label for="job-description">
+                            <span>Job Description <span class="required">*</span></span>
+                            <span class="label-info">Paste the target job requirements</span>
+                        </label>
+                        <textarea id="job-description" name="job_description" placeholder="Paste the job description here... (e.g., Software Engineer with Python, React, and AWS experience. Must have 3+ years of experience...)" required></textarea>
+                    </div>
+
+                    <!-- Resume File Upload Dropzone -->
+                    <div class="form-group">
+                        <label>
+                            <span>Resume Document <span class="required">*</span></span>
+                            <span class="label-info">Supported formats: PDF, DOCX, TXT</span>
+                        </label>
+                        <div id="dropzone" class="dropzone">
+                            <input type="file" id="resume" name="resume" accept=".pdf,.docx,.doc,.txt,.md" required>
+                            <div class="dropzone-content">
+                                <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                                <h3>Drag & drop your resume</h3>
+                                <p>or <span>browse your files</span></p>
+                                <span class="file-limits">PDF, DOCX or TXT (Max 16MB)</span>
+                            </div>
+                            <div id="file-preview" class="file-preview hidden">
+                                <i class="fa-solid fa-file-pdf file-icon" id="file-icon-type"></i>
+                                <div class="file-details">
+                                    <span class="file-name" id="file-name-text">filename.pdf</span>
+                                    <span class="file-size" id="file-size-text">2.4 MB</span>
+                                </div>
+                                <button type="button" id="remove-file-btn" class="remove-btn">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submit-btn" class="btn btn-primary btn-block">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i>
+                        <span>Analyze Resume</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Right Side: Results Panel -->
+            <section class="results-panel glass-panel">
+                <!-- Welcome View -->
+                <div id="welcome-view" class="results-placeholder">
+                    <div class="placeholder-icon-container">
+                        <i class="fa-solid fa-chart-line-up placeholder-icon"></i>
+                    </div>
+                    <h2>Ready for ATS Screening</h2>
+                    <p>Upload a resume and paste a job description on the left to review match score, key terms, gaps, and improvements.</p>
+                </div>
+
+                <!-- Loading View -->
+                <div id="loading-view" class="results-placeholder hidden">
+                    <div class="spinner-container">
+                        <div class="spinner"></div>
+                        <div class="spinner-pulse"></div>
+                    </div>
+                    <h2>Analyzing Resume...</h2>
+                    <p>Extracting text, comparing skills, and building ATS recommendations.</p>
+                </div>
+
+                <!-- Analysis Results View -->
+                <div id="results-view" class="results-content hidden">
+                    <!-- Results Header / Tabs -->
+                    <div class="results-nav">
+                        <button class="tab-btn active" data-tab="dashboard">
+                            <i class="fa-solid fa-chart-pie"></i> Dashboard
+                        </button>
+                        <button class="tab-btn" data-tab="skills">
+                            <i class="fa-solid fa-tags"></i> Skill Analysis
+                        </button>
+                        <button class="tab-btn" data-tab="recommendations">
+                            <i class="fa-solid fa-list-check"></i> ATS Gaps
+                        </button>
+                        <button class="tab-btn" data-tab="details">
+                            <i class="fa-solid fa-address-card"></i> Extracted Info
+                        </button>
+                        <button class="tab-btn" data-tab="courses">
+                            <i class="fa-solid fa-graduation-cap"></i> Recommended Courses
+                        </button>
+                    </div>
+
+                    <!-- Tab Contents Container -->
+                    <div class="tab-contents">
+                        <!-- TAB: Dashboard -->
+                        <div class="tab-pane active" id="tab-dashboard">
+                            <div class="dashboard-grid">
+                                <!-- Score Card -->
+                                <div class="dashboard-card score-card">
+                                    <h3>ATS Match Score</h3>
+                                    <div class="gauge-container">
+                                        <svg viewBox="0 0 100 100" class="gauge">
+                                            <circle cx="50" cy="50" r="40" class="gauge-bg"></circle>
+                                            <circle cx="50" cy="50" r="40" class="gauge-fill" id="score-gauge-fill"></circle>
+                                        </svg>
+                                        <div class="gauge-label">
+                                            <span class="score-value" id="score-text">0%</span>
+                                            <span class="score-status" id="score-status-text">Good Match</span>
+                                        </div>
+                                    </div>
+                                    <p class="score-desc">Overall suitability based on keywords, contact info, structure, and formatting.</p>
+                                </div>
+
+                                <!-- Quick Profile Card -->
+                                <div class="dashboard-card profile-card">
+                                    <h3>Candidate Profile</h3>
+                                    <div class="profile-details-list">
+                                        <div class="profile-item">
+                                            <span class="label">Name</span>
+                                            <span class="value" id="profile-name">-</span>
+                                        </div>
+                                        <div class="profile-item">
+                                            <span class="label">Email</span>
+                                            <span class="value" id="profile-email">-</span>
+                                        </div>
+                                        <div class="profile-item">
+                                            <span class="label">Phone</span>
+                                            <span class="value" id="profile-phone">-</span>
+                                        </div>
+                                        <div class="profile-item">
+                                            <span class="label">Word Count</span>
+                                            <span class="value" id="profile-word-count">-</span>
+                                        </div>
+                                        <div class="profile-item">
+                                            <span class="label">Engine</span>
+                                            <span class="value badge-engine" id="profile-engine">Rule Engine</span>
+                                        </div>
+                                    </div>
+                                    <div class="links-container" id="profile-links">
+                                        <!-- Dynamic social links -->
+                                    </div>
+                                </div>
+
+                                <!-- Overview Metrics -->
+                                <div class="dashboard-card full-width summary-card">
+                                    <h3>Summary & Match Progress</h3>
+                                    <div class="metric-row">
+                                        <div class="metric-col">
+                                            <span class="metric-number text-success" id="matched-skills-count">0</span>
+                                            <span class="metric-label">Matched Skills</span>
+                                        </div>
+                                        <div class="divider"></div>
+                                        <div class="metric-col">
+                                            <span class="metric-number text-danger" id="missing-skills-count">0</span>
+                                            <span class="metric-label">Missing Skills</span>
+                                        </div>
+                                        <div class="divider"></div>
+                                        <div class="metric-col">
+                                            <span class="metric-number text-warning" id="issues-count">0</span>
+                                            <span class="metric-label">ATS Gaps Found</span>
+                                        </div>
+                                    </div>
+                                    <div class="engine-notice alert-box hidden" id="api-error-notice">
+                                        <!-- Temporary alert if API fails -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Skills Analysis -->
+                        <div class="tab-pane" id="tab-skills">
+                            <div class="pane-header">
+                                <h3>Skills Audit</h3>
+                                <p>Identified skill tags from the resume mapped against keywords in the Job Description.</p>
+                            </div>
+                            
+                            <div class="skills-split">
+                                <div class="skills-block">
+                                    <h4><i class="fa-solid fa-circle-check text-success"></i> Matched Skills (<span id="matched-skills-badge-count">0</span>)</h4>
+                                    <div class="skills-grid" id="matched-skills-list">
+                                        <!-- Matched skill badges -->
+                                    </div>
+                                </div>
+
+                                <div class="skills-block">
+                                    <h4><i class="fa-solid fa-triangle-exclamation text-danger"></i> Missing Keywords (<span id="missing-skills-badge-count">0</span>)</h4>
+                                    <div class="skills-grid" id="missing-skills-list">
+                                        <!-- Missing skill badges -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Recommendations -->
+                        <div class="tab-pane" id="tab-recommendations">
+                            <div class="pane-header">
+                                <h3>ATS Action Plan</h3>
+                                <p>Implement these recommendations to improve parser compatibility and increase candidate ranking.</p>
+                            </div>
+                            
+                            <div class="recommendations-list" id="recommendations-list">
+                                <!-- Recommendations cards -->
+                            </div>
+                        </div>
+
+                        <!-- TAB: Extracted Info -->
+                        <div class="tab-pane" id="tab-details">
+                            <div class="pane-header">
+                                <h3>Extracted Sections</h3>
+                                <p>How resume parsers interpret the structure of your document.</p>
+                            </div>
+
+                            <div class="sections-container">
+                                <div class="resume-section-card">
+                                    <h4><i class="fa-solid fa-briefcase text-primary"></i> Work Experience</h4>
+                                    <div class="timeline" id="experience-timeline">
+                                        <!-- Timeline items -->
+                                    </div>
+                                </div>
+
+                                <div class="resume-section-card">
+                                    <h4><i class="fa-solid fa-graduation-cap text-indigo"></i> Education & Credentials</h4>
+                                    <div class="timeline" id="education-timeline">
+                                        <!-- Education items -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Recommended Courses -->
+                        <div class="tab-pane" id="tab-courses">
+                            <div class="pane-header">
+                                <h3>Bridge the Skill Gaps</h3>
+                                <p>Suggested learning resources to add missing skills to your resume and career toolkit.</p>
+                            </div>
+
+                            <div class="courses-grid" id="courses-list">
+                                <!-- Course cards -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- API Key Settings Modal -->
+    <div id="api-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-gears text-primary"></i> Configure Gemini AI</h3>
+                <button id="close-modal-btn" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>This application can use the Google Gemini API to perform highly detailed, human-like resume reviews, rewrite tips, and precise matching.</p>
+                
+                <div class="form-group">
+                    <label for="modal-api-key">Gemini API Key</label>
+                    <input type="password" id="modal-api-key" placeholder="AIzaSy...">
+                    <span class="label-info">Your API key is saved locally in your browser's localStorage and is only sent to the local backend.</span>
+                </div>
+                
+                <div class="help-box">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <div>
+                        <strong>Don't have an API key?</strong>
+                        <p>You can get a free API key from <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer">Google AI Studio</a>. If left empty, the application will use the local rule-based parsing engine.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="clear-api-key-btn" class="btn btn-secondary">Clear Key</button>
+                <button id="save-api-key-btn" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <i class="fa-solid fa-circle-exclamation toast-icon"></i>
+        <span class="toast-message">Error message here</span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

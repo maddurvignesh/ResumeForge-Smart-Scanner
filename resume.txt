@@ -1,0 +1,21 @@
+Johnathan Doe
+j.doe@email.com | +1 999 123 4567 | github.com/jdoe-dev
+New York, NY
+
+OBJECTIVE
+Highly skilled software engineer looking for a React and Python developer position.
+
+EXPERIENCE
+Frontend Developer | DevCorp (2023 - Present)
+- Developed responsive web interfaces using React, JavaScript, HTML, and CSS.
+- Collaborated with product designers in Figma.
+
+Software Engineer Intern | WebStart (2022 - 2023)
+- Maintained legacy Python backend codebase and created Django endpoints.
+- Integrated SQLite database queries.
+
+EDUCATION
+B.Tech in Computer Science | Tech Institute (2019 - 2023)
+
+SKILLS
+Python, Django, JavaScript, React, Git, HTML, CSS, Figma, SQLite
